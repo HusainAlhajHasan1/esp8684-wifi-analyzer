@@ -1,0 +1,16 @@
+# Shell scripts must keep LF endings or Linux/macOS cannot execute them.
+# A Windows checkout with core.autocrlf=true is exactly how gradlew breaks in CI
+# while working perfectly in Android Studio.
+*.sh        text eol=lf
+gradlew     text eol=lf
+*.bat       text eol=crlf
+*.ps1       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.kt        text eol=lf
+*.kts       text eol=lf
+*.c         text eol=lf
+*.h         text eol=lf
+*.py        text eol=lf
+*.md        text eol=lf
+*.bin       binary

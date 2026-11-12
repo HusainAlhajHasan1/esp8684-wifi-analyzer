@@ -50,10 +50,26 @@ jobs:
           echo "platforms present:"; ls "$SDK/platforms"
           echo "sdk.dir=$SDK" > android/local.properties
 
+      - name: Diagnose the checkout
+        working-directory: android
+        run: |
+          echo "--- gradlew line endings (CRLF would break execution) ---"
+          file gradlew
+          head -1 gradlew | od -c | head -2
+          git ls-files --eol gradlew || true
+          echo "--- toolchain ---"
+          java -version
+          echo "--- jvm args committed in gradle.properties ---"
+          grep -E 'jvmargs|Metaspace' gradle.properties || true
+
       - name: Build debug APK
         working-directory: android
         run: |
           chmod +x gradlew          # Windows checkouts lose the exec bit
+          # The committed -Xmx640m is tuned for a 2 GB laptop. CI has ~7 GB, and
+          # the Compose compiler needs more than 224m of metaspace, so raise the
+          # ceiling here rather than making local builds heavy again.
+          sed -i 's/-Xmx640m/-Xmx2g/; s/MaxMetaspaceSize=224m/MaxMetaspaceSize=512m/' gradle.properties
           ./gradlew --no-daemon --stacktrace --console=plain assembleDebug
 
       - name: Collect APK
