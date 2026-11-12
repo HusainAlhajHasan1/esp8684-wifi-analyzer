@@ -15,10 +15,15 @@ firmware says `E_UNSUPPORTED` — it never invents results.
 |---|---|---|
 | **1** | Hardware verification, USB-serial link, JSON protocol, basic commands | ✅ **Accepted on hardware** — 23/23 checks, `PHASE 1 LINK OK` (v0.2.1) |
 | **2** | Wi-Fi scanner, classification, real `scan_result` frames | ✅ **Accepted on hardware** — real 13-network sweep, 3 pages reassembled, 0 violations (v0.2.1) |
-| 3 | Android app (Kotlin/Compose, USB host, scanner UI) | Not started — `android/` is empty |
+| **3** | Android app (Kotlin/Compose, USB host, scanner UI) | 🚧 **Source complete** — scan/filter/details client in `android/`; APK built by CI (see [`.github/workflows/android.yml`](.github/workflows/android.yml)) |
 | 4 | Signal monitor, channel overview, SoftAP lab mode | Not started |
 | 5 | History (Room + optional Supabase), export, AI assistant | Schema drafted, unapplied |
 | 6 | Arabic + English, polish, full docs | Not started |
+
+The Android client is deliberately **passive**: it displays what the radio
+advertises and nothing more. What this project will never implement — cloned APs,
+WPS attack modes, credential capture — is written down in
+[`docs/SECURITY_BOUNDARIES.md`](docs/SECURITY_BOUNDARIES.md).
 
 Contract version: **v3** (`PROTOCOL.md` §7/§8). Firmware: **v0.2.1**. One documented
 deviation is carried against v0.2.1 (`wpa3-enterprise` lacks the `strong` flag),
@@ -125,6 +130,7 @@ docs/
   HARDWARE.md             board identification, wiring, flashing, error table
   PHASE1_TEST_PLAN.md     step-by-step acceptance criteria
   LIMITATIONS.md          real hardware/design limits
+  SECURITY_BOUNDARIES.md  what this project refuses to build, and why
   sql/                    Supabase schema for optional cloud history (Phase 5)
 tools/host/
   serial_probe.py         link + scan harness (list / probe / scan / self-test)
@@ -135,7 +141,9 @@ tools/windows/
   2_run_probe.bat           thin launcher: run the acceptance suite, write the report
   run_phase1.py             the real logic (ports, esptool, flash, probe, clipboard)
   README_WINDOWS.md         step-by-step Windows walkthrough + troubleshooting
-android/                  Android project (Phase 3)
+android/                  Android client (Phase 3): Kotlin + Compose + USB host
+  README.md               what it does, what it refuses to do, how to build
+.github/workflows/        CI: builds the debug APK on every push
 ```
 
 ---

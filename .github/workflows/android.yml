@@ -1,0 +1,51 @@
+name: Android APK
+
+# The debug APK is built in CI rather than on a workstation so the artifact is
+# always available from the repo: Actions tab -> latest run -> Artifacts.
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+  pull_request:
+    paths:
+      - 'android/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept SDK licences
+        run: yes | sdkmanager --licenses > /dev/null || true
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace assembleDebug
+
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          find android -name '*.apk' -exec cp {} out/ \;
+          ls -l out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wifi-analyzer-debug-apk
+          path: out/*.apk
+          if-no-files-found: error

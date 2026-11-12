@@ -1,0 +1,11 @@
+# Local SDK path (machine-specific, never commit)
+local.properties
+
+# Build output
+build/
+.gradle/
+*.apk
+*.aab
+captures/
+.externalNativeBuild/
+.cxx/
