@@ -50,10 +50,16 @@ Write-Host "    git: $((git --version))"
 if ($RepoUrl -notmatch '^(https://github\.com/|git@github\.com:)') {
     Die "RepoUrl does not look like a GitHub remote: $RepoUrl`n       Expected https://github.com/<you>/<repo>.git or git@github.com:<you>/<repo>.git"
 }
-if ($RepoUrl -match '^https://github\.com/[^/]+/[^/]+/?$') {
+# Normalise the suffix exactly once. The previous test was "no trailing slash",
+# which is also true of a URL that already ends in .git - so
+# .../analyzer.git became .../analyzer.git.git and every push reported
+# "Repository not found". Test the SUFFIX, not the absence of a slash.
+$RepoUrl = $RepoUrl.TrimEnd('/')
+if (-not $RepoUrl.EndsWith('.git')) {
     Write-Host "    note: URL has no .git suffix - adding it" -ForegroundColor Yellow
-    $RepoUrl = $RepoUrl.TrimEnd('/') + ".git"
+    $RepoUrl = "$RepoUrl.git"
 }
+Write-Host "    remote: $RepoUrl"
 
 if (-not (Test-Path (Join-Path $ProjectPath "firmware"))) {
     Die "$ProjectPath does not look like the project root (no firmware folder)."
@@ -133,7 +139,9 @@ if ($remotes -contains "origin") {
     Write-Host "    added remote origin"
 }
 
+$ErrorActionPreference = "Continue"
 $already = (git ls-remote --heads origin 2>$null)
+$ErrorActionPreference = "Stop"
 if ($already) {
     Write-Host "    remote already has commits - pulling with --rebase first" -ForegroundColor Yellow
     git pull --rebase origin $Branch

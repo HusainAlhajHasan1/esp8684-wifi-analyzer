@@ -1,7 +1,11 @@
 name: Android APK
 
-# The debug APK is built in CI rather than on a workstation so the artifact is
-# always available from the repo: Actions tab -> latest run -> Artifacts.
+# The debug APK is built in CI so the artifact is always available from the repo:
+# Actions tab -> latest run -> Artifacts.
+#
+# No android-actions/setup-android here: that action failed on the first real run
+# ("Set up Android SDK") while the runner already had a complete SDK installed.
+# Using the preinstalled SDK removes a third-party step from the critical path.
 on:
   push:
     branches: [ main ]
@@ -26,22 +30,36 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept SDK licences
-        run: yes | sdkmanager --licenses > /dev/null || true
+      - name: Use the preinstalled Android SDK
+        run: |
+          set -e
+          echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-unset}"
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          if [ ! -d "$SDK" ]; then
+            echo "::error::No Android SDK found at $SDK"
+            exit 1
+          fi
+          SDKMGR="$(command -v sdkmanager || true)"
+          if [ -z "$SDKMGR" ]; then
+            SDKMGR="$(ls -d "$SDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
+          fi
+          echo "sdkmanager: $SDKMGR"
+          yes | "$SDKMGR" --licenses > /dev/null 2>&1 || true
+          "$SDKMGR" --install "platforms;android-34" "build-tools;34.0.0" | tail -2
+          echo "platforms present:"; ls "$SDK/platforms"
+          echo "sdk.dir=$SDK" > android/local.properties
 
       - name: Build debug APK
         working-directory: android
         run: |
-          chmod +x gradlew
-          ./gradlew --no-daemon --stacktrace assembleDebug
+          chmod +x gradlew          # Windows checkouts lose the exec bit
+          ./gradlew --no-daemon --stacktrace --console=plain assembleDebug
 
       - name: Collect APK
         run: |
           mkdir -p out
-          find android -name '*.apk' -exec cp {} out/ \;
+          find android/app/build/outputs -name '*.apk' -exec cp -v {} out/ \;
           ls -l out
 
       - uses: actions/upload-artifact@v4
