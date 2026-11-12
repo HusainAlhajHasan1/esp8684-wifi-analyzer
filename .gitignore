@@ -1,0 +1,48 @@
+# --- Measurement data: never publish real SSIDs / BSSIDs -------------------
+# A scan capture describes the physical neighbourhood of whoever ran it.
+# It stays on the machine that measured it; only structured metadata is shared.
+scan*.json
+scan*.csv
+phase1_report.json
+capture_*.bin
+
+# --- Release archives ------------------------------------------------------
+*.zip
+*.bundle
+
+# --- PlatformIO / ESP-IDF build output ------------------------------------
+.pio/
+firmware/.pio/
+managed_components/
+dependencies.lock
+sdkconfig
+sdkconfig.old
+build/
+
+# NOTE: firmware/sdkconfig.defaults is SOURCE and must be committed - it pins
+# CONFIG_XTAL_FREQ_26 and the 115200 console. Only the generated `sdkconfig`
+# above is ignored.
+
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# --- Editors / OS ---------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Secrets --------------------------------------------------------------
+# Nothing in this project needs a credential, and nothing should ever add one.
+.env
+.env.*
+secrets.*
+*.pem
+*.key
+.netrc
+.git-credentials

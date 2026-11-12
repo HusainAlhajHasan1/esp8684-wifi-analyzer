@@ -1,0 +1,71 @@
+# ============================================================================
+# sdkconfig.defaults — ESP8684 / ESP32-C2, Phase 1
+# Applied on a clean build. Delete sdkconfig to regenerate.
+# ============================================================================
+
+# --- Target ----------------------------------------------------------------
+CONFIG_IDF_TARGET="esp32c2"
+
+# --- Crystal ---------------------------------------------------------------
+# ESP32-C2's Kconfig default is 40 MHz, but this hardware has a 26 MHz crystal
+# (esptool reports "Crystal frequency: 26MHz").  With the wrong value every
+# PLL-derived clock is scaled by 26/40: the CPU runs at ~78 MHz instead of 120,
+# and a UART asked for 115200 actually transmits at 115200 * 26 / 40 = 74880.
+# That mismatch is what made the board look "silent" on a 115200 host.
+CONFIG_XTAL_FREQ_26=y
+# CONFIG_XTAL_FREQ_40 is not set
+
+# --- Console / logging -----------------------------------------------------
+# Logs are NOT printed raw to UART0: log_router.c wraps every IDF log line
+# into a JSON frame ({"type":"event.log"}) so the protocol stream can never be
+# corrupted by a stray printf. Default level WARN keeps the link quiet.
+# Console pinned to "custom UART0" purely to keep the baud at 115200:
+# with ESP_CONSOLE_UART_DEFAULT the baud prompt is hidden, so IDF forces its own
+# default - which for ESP32-C2 + a 26 MHz crystal is 74880. Pinning the channel
+# makes the 2nd-stage bootloader, the IDF boot log and our protocol all speak
+# one rate. Only the mask-ROM banner still comes out at 74880; it prints before
+# any of this configuration exists and cannot be changed.
+CONFIG_ESP_CONSOLE_UART_CUSTOM=y
+CONFIG_ESP_CONSOLE_UART_CUSTOM_NUM_0=y
+# CONFIG_ESP_CONSOLE_UART_DEFAULT is not set
+CONFIG_ESP_CONSOLE_UART_NUM=0
+CONFIG_ESP_CONSOLE_UART_TX_GPIO=-1
+CONFIG_ESP_CONSOLE_UART_RX_GPIO=-1
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200
+CONFIG_LOG_DEFAULT_LEVEL_WARN=y
+CONFIG_LOG_MAXIMUM_LEVEL_INFO=y
+CONFIG_LOG_COLORS=n
+
+# --- Memory / CPU ----------------------------------------------------------
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_120=y
+CONFIG_FREERTOS_HZ=1000
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=4096
+CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE=2048
+
+# Wi-Fi buffers: scan-only needs a modest set. Tuned for ESP8684's ~272 KB SRAM.
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=4
+CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=16
+CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM=16
+# NOTE: A-MPDU TX/RX are no longer Kconfig-tunable in ESP-IDF 5.x (always on).
+CONFIG_ESP_WIFI_AMPDU_RX_ENABLED=y
+CONFIG_ESP_WIFI_NVS_ENABLED=y
+
+# --- Watchdog --------------------------------------------------------------
+# The watchdog is created in firmware/src/main.c (esp_task_wdt_init) with
+# trigger_panic=true, so it is configured there, not here. Keep it disabled at
+# boot so the single-core scheduler is not reset-gated before tasks exist.
+CONFIG_ESP_TASK_WDT_INIT=n
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=15
+
+# --- Brownout --------------------------------------------------------------
+CONFIG_ESP_BROWNOUT_DET=y
+CONFIG_ESP_BROWNOUT_DET_LVL_SEL_7=y
+
+# --- Bootloader ------------------------------------------------------------
+CONFIG_BOOTLOADER_LOG_LEVEL_WARN=y
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
+CONFIG_ESPTOOLPY_FLASHFREQ_60M=y
+
+# --- Stack sizes for our tasks --------------------------------------------
+CONFIG_FREERTOS_TIMER_TASK_STACK_DEPTH=2048

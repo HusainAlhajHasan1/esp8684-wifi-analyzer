@@ -1,0 +1,26 @@
+idf_component_register(
+    SRCS
+        "main.c"
+        "protocol.c"
+        "serial_manager.c"
+        "command_processor.c"
+        "device_info.c"
+        "app_config.c"
+        "log_router.c"
+        "network_classifier.c"
+        "wifi_scanner.c"
+    INCLUDE_DIRS "."
+    REQUIRES
+        json
+        driver
+        nvs_flash
+        esp_timer
+        esp_system
+        esp_hw_support
+        spi_flash
+        log
+        efuse
+        esp_wifi
+        esp_netif
+        esp_event
+)

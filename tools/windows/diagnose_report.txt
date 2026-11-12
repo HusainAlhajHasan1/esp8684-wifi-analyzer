@@ -1,0 +1,4 @@
+sentinel line
+  bytes=8  printable=100.0%  distinct=7  -> JSON protocol frames
+  raw copy: capture_selftest.bin
+  0000  7b 22 76 22 3a 31 7d 0a                          {"v":1}.
